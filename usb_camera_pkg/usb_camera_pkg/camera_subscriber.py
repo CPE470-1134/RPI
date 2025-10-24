@@ -15,6 +15,7 @@ class CameraSubscriber(Node):
         self.bridge = CvBridge()
 
     def listener_callback(self, msg):
+        print(msg)
         try:
             # Convert ROS Image → OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")

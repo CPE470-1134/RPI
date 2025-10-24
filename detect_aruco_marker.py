@@ -1,11 +1,12 @@
 import cv2
 import numpy as np
+import os
 
-image = cv2.imread("ArUco.png")
+print("OpenCV version:", cv2.__version__)
+image = cv2.imread("./ArUco.png")
 aruco_dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-aruco_parameters = cv2.aruco.DetectorParameters()
-aruco_detector = cv2.aruco.ArucoDetector(aruco_dictionary, aruco_parameters)
-corners, marker_ids, rejected = aruco_detector.detectMarkers(image=image)
+aruco_parameters = cv2.aruco.DetectorParameters_create()
+corners, marker_ids, rejected = cv2.aruco.detectMarkers(image, aruco_dictionary, parameters=aruco_parameters)
 if len(corners) > 0:
     # Draw green bounding box around the detected marker
     for corner in corners:
@@ -27,7 +28,7 @@ if len(corners) > 0:
             (255, 55, 55),
             2,
         )
-cv2.imshow("Detected Aruco Marker", image)
-cv2.waitKey(0)
-cv2.imwrite("annotated_image", image)
+#cv2.imshow("Detected Aruco Marker", image)
+#cv2.waitKey(0)
+cv2.imwrite("annotated_image.png", image)
 cv2.destroyAllWindows()

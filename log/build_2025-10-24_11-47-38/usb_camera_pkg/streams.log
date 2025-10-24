@@ -1,0 +1,25 @@
+[1.051s] Invoking command in '/root/RPI/usb_camera_pkg': PYTHONPATH=/root/RPI/build/usb_camera_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/root/RPI/install/usb_camera_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../build/usb_camera_pkg build --build-base /root/RPI/build/usb_camera_pkg/build install --record /root/RPI/build/usb_camera_pkg/install.log --single-version-externally-managed install_data
+[1.359s] running egg_info
+[1.360s] writing ../build/usb_camera_pkg/usb_camera_pkg.egg-info/PKG-INFO
+[1.360s] writing dependency_links to ../build/usb_camera_pkg/usb_camera_pkg.egg-info/dependency_links.txt
+[1.367s] writing entry points to ../build/usb_camera_pkg/usb_camera_pkg.egg-info/entry_points.txt
+[1.367s] writing requirements to ../build/usb_camera_pkg/usb_camera_pkg.egg-info/requires.txt
+[1.368s] writing top-level names to ../build/usb_camera_pkg/usb_camera_pkg.egg-info/top_level.txt
+[1.378s] reading manifest file '../build/usb_camera_pkg/usb_camera_pkg.egg-info/SOURCES.txt'
+[1.379s] writing manifest file '../build/usb_camera_pkg/usb_camera_pkg.egg-info/SOURCES.txt'
+[1.392s] running build
+[1.393s] running build_py
+[1.393s] copying usb_camera_pkg/camera_subscriber.py -> /root/RPI/build/usb_camera_pkg/build/lib/usb_camera_pkg
+[1.393s] running install
+[1.396s] running install_lib
+[1.398s] copying /root/RPI/build/usb_camera_pkg/build/lib/usb_camera_pkg/camera_subscriber.py -> /root/RPI/install/usb_camera_pkg/lib/python3.10/site-packages/usb_camera_pkg
+[1.407s] byte-compiling /root/RPI/install/usb_camera_pkg/lib/python3.10/site-packages/usb_camera_pkg/camera_subscriber.py to camera_subscriber.cpython-310.pyc
+[1.422s] running install_data
+[1.422s] running install_egg_info
+[1.428s] removing '/root/RPI/install/usb_camera_pkg/lib/python3.10/site-packages/usb_camera_pkg-0.0.0-py3.10.egg-info' (and everything under it)
+[1.429s] Copying ../build/usb_camera_pkg/usb_camera_pkg.egg-info to /root/RPI/install/usb_camera_pkg/lib/python3.10/site-packages/usb_camera_pkg-0.0.0-py3.10.egg-info
+[1.432s] running install_scripts
+[1.472s] Installing camera_publisher script to /root/RPI/install/usb_camera_pkg/lib/usb_camera_pkg
+[1.477s] Installing camera_subscriber script to /root/RPI/install/usb_camera_pkg/lib/usb_camera_pkg
+[1.477s] writing list of installed files to '/root/RPI/build/usb_camera_pkg/install.log'
+[1.553s] Invoked command in '/root/RPI/usb_camera_pkg' returned '0': PYTHONPATH=/root/RPI/build/usb_camera_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/root/RPI/install/usb_camera_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../build/usb_camera_pkg build --build-base /root/RPI/build/usb_camera_pkg/build install --record /root/RPI/build/usb_camera_pkg/install.log --single-version-externally-managed install_data

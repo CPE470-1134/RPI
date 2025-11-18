@@ -15,12 +15,12 @@ setup(
     zip_safe=True,
     maintainer='root',
     maintainer_email='cpe470.1134@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='ArUco marker detection and pose estimation nodes',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'aruco_node = aruco_pkg.aruco_node:main'
+            'aruco_node=aruco_pkg.aruco_node:main',
         ],
     },
 )

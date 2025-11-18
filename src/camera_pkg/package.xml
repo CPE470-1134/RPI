@@ -3,9 +3,14 @@
 <package format="3">
   <name>camera_pkg</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Camera publisher and subscriber nodes for ROS2</description>
   <maintainer email="cpe470.1134@gmail.com">root</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>opencv-python</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

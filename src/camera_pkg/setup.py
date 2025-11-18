@@ -15,11 +15,12 @@ setup(
     zip_safe=True,
     maintainer='root',
     maintainer_email='cpe470.1134@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Camera publisher and subscriber nodes for ROS2',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'camera_node=camera_pkg.camera_node:main',
         ],
     },
 )

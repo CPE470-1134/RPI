@@ -31,14 +31,6 @@ CRC_TABLE =[
 ]
 #HEADER = 0x54
 
-PORT = "/dev/ttyUSB0"
-
-# If Mac - Use /dev/cu.usbserial-0001 
-if sys.platform == "darwin":
-    PORT = "/dev/cu.usbserial-0001" 
-
-
-BAUD = 230400
 class LDPoint:
     def __init__(self, dist, intensity, angle):
         self.distance = dist
@@ -127,86 +119,3 @@ class LD19Packet:
         self.timestamp = struct.unpack_from("<H",self.raw, TIMESTAMP_OFFSET)[0]
 
         self.crc = self.raw[-1] # last byte is CRC-8
-        
-def main():
-    print("Hello from lab4!")
-
-    # Read Serial Data from the USB with pyserial
-    # on /dev/tStyUSB0
-
-    #polar_plot_manager = PolarPlotter()
-    cartesian_plot_manager = CartesianPlotter()
-    rotation_points = []
-    last_angle = 0
-    scan_count = 0
-    
-    with serial.Serial(PORT,BAUD,timeout=1) as ser:
-        print("Opened USB/Port Port:" + ser.name)
-
-        try:
-            while True:
-
-                # Read Until Header is Found 
-                # Once Found, Parse and Store LD Frame
-                b = ser.read()
-                if is_header(b):
-                    #Parse
-                    #print("Start of Frame Detected!")
-                    
-                    # Read FRAME_SIZE - 1 Bytes (Rest of Frame Besides Header )
-                    frame_data = bytes([b[0]]) + ser.read(LD19Packet.FRAME_SIZE - 1)
-                    new_frame = LD19Packet(raw=frame_data)
-
-                   
-                    # Check if a new rotation has started and we have enough points for a full scan
-                    if new_frame.start_angle < last_angle:
-                        scan_count += 1
-                    
-                    #print(scan_count)
-                    if scan_count >= 25:
-                        #print(f"Scan Count: {scan_count}")
-                        #polar_plot_manager.update(rotation_points)
-                        cartesian_plot_manager.update(rotation_points)
-                        
-                        #polar_plot_manager.save(f"./Polar/lidar_scan_polar_{scan_count}.png")
-                       
-                        scan_count = 0
-                        rotation_points = []
-
-                    rotation_points.extend(new_frame.LDPoints)
-                    last_angle = new_frame.start_angle
-
-                    display_frame(new_frame)
-                    #cartesian_plot_manager.save(f"./Cartesian/lidar_scan_cartesian.png")
-
-        except KeyboardInterrupt:
-            print("Stopping...")
-            #polar_plot_manager.close()
-            cartesian_plot_manager.close()
-
-# Tabulate the frame data
-def display_frame(new_frame):
-    print("--------------------------------")
-    print("Frame Data:")
-    print("Hex Format: " + new_frame.raw.hex())
-    print(f"Header: {0x54:02x}")
-    print("Ver Length: " + str(new_frame.ver_len))
-    print("Speed (RPM): " + str(new_frame.speed / 64.0))
-    print("Start Angle (Degrees): " + str(new_frame.start_angle))
-    print("End Angle (Degrees): " + str(new_frame.end_angle))
-    print("Timestamp (ms): " + str(new_frame.timestamp))
-    print()
-    for i,pt in enumerate(new_frame.LDPoints):
-        print(f"Point {i}: Distance (mm): {pt.distance}, Intensity: {pt.intensity}")
-    print("CRC: " + str(new_frame.crc))
-    print("--------------------------------")
-    
-
-def is_header(b : bytes):
-    # Index First Byte 
-    return b[0] == LD19Packet.HEADER
-
-if __name__ == "__main__":
-    main()
-
-

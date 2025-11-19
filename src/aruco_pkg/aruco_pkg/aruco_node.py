@@ -78,10 +78,10 @@ class ArucoAlignmentNode(Node):
             Path(__file__).resolve().parents[3] / "src" / "RPI",
         ]
         for root in search_roots:
-            candidate = root / "camera_matrix.npz"
+            candidate = root / "calibration_data.npz"
             if candidate.exists():
                 return candidate
-        raise FileNotFoundError("camera_matrix.npz not found. Please run the camera calibration script in camera_pkg to generate it.")
+        raise FileNotFoundError("calibration_data.npz not found. Please run the camera calibration script in camera_pkg to generate it.")
 
     def _load_calibration(self, path: Path) -> Tuple[np.ndarray, np.ndarray]:
         if not path.exists():
@@ -100,7 +100,7 @@ class ArucoAlignmentNode(Node):
     # ============================================================
     def _process_frame(self) -> None:
         
-        
+
         #self.get_logger().info(f"Reading Frame {self.frame_num}") 
         ret, frame = self.cap.read()
         self.frame_num += 1

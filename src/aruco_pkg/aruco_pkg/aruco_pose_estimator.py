@@ -6,7 +6,7 @@ import cv2 as cv
 def load_calibration():
     """Load camera calibration data."""
     try:
-        data = np.load('camera_matrix.npz')
+        data = np.load('calibration_data.npz')
         return data['mtx'], data.get('dist', None)
     except:
         print("No calibration file found. Will use uncalibrated estimation.")

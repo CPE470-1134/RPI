@@ -65,7 +65,7 @@ class ArucoPoseEstimator(Node):
         """Load camera calibration parameters from file."""
         try:
             # Load camera calibration from the npz file
-            calib_data = np.load('/root/RPI/camera_matrix.npz')
+            calib_data = np.load('/root/RPI/calibration_data.npz')
             self.camera_matrix_cal = calib_data['camera_matrix']
             self.dist_coeffs_cal = calib_data['dist_coeffs']
             self.get_logger().info('Camera calibration loaded successfully')

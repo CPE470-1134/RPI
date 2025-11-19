@@ -1,7 +1,7 @@
 import sys
 import serial
-from lidar import LD19Packet
-from plotters import CartesianPlotter
+from .lidar import LD19Packet
+from .plotters import CartesianPlotter
 
 
 PORT = "/dev/ttyUSB0"

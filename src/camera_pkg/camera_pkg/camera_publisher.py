@@ -30,6 +30,8 @@ class CameraPublisher(Node):
         ros_image = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
         self.publisher.publish(ros_image)
         self.get_logger().info("Publishing frame.")
+        #cv2.imshow("Frame", frame)
+        #cv2.waitKey(1)
 
     def __del__(self):
         if self.capture.isOpened():

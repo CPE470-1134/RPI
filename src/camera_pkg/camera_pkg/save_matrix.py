@@ -10,6 +10,6 @@ camera_matrix = np.array([
 dist_coeffs = np.array([[-0.018522, 1.03979, 0, 0, -3.3171, 0, 0, 0]])
 
 # Save both matrices
-np.savez('/root/RPI/camera_matrix.npz', 
+np.savez(Path(__file__).resolve().parents[3] / "camera_pkg" / "camera_pkg" / "camera_matrix.npz", 
          camera_matrix=camera_matrix,
          dist_coeffs=dist_coeffs)

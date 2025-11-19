@@ -21,6 +21,9 @@ setup(
     entry_points={
         'console_scripts': [
             'camera_node=camera_pkg.camera_node:main',
+            'camera_publisher=camera_pkg.camera_publisher:main',
+            'camera_subscriber=camera_pkg.camera_subscriber:main',
+            'calibration=camera_pkg.calibration:main'
         ],
     },
 )

@@ -35,6 +35,7 @@ criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 print("Press 'c' to capture when chessboard is detected")
 print("Press 'q' to quit")
 print(f"Need {num_images_needed} good images for calibration")
+CAPTURE_BASE_DIR = Path(__file__).resolve().parents[3] / "camera_pkg" / "camera_pkg" / "images"
 
 while True:
     # Capture frame-by-frame
@@ -54,8 +55,8 @@ while True:
         # Refine corner positions
         corners2 = cv.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
         # Save image automatically when chessboard is detected
-        img_name = f"calibration_images/chessboard_{img_counter}.jpg"
-        cv.imwrite(img_name, frame)
+        img_name = f"chessboard_{img_counter}.jpg"
+        cv.imwrite(os.path.join(CAPTURE_BASE_DIR, img_name), frame)
         print(f"Captured {img_name}")
         img_counter += 1
         # Wait a bit before next capture to move the board

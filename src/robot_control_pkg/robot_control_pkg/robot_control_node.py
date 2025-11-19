@@ -58,7 +58,7 @@ class ArucoAlignAndApproach(Node):
         self.current_alpha: Optional[float] = None  # latest alpha (rad)
         self.current_delta: Optional[float] = None  # latest delta (m)
 
-        self.aligned: bool = False  # have we satisfied |alpha| < 3° ?
+        self.aligned: bool = False  # have we satisfied |alpha| < 3 degrees ?
 
         # For distance tracking during 2c
         self.approach_started: bool = False
@@ -118,6 +118,11 @@ class ArucoAlignAndApproach(Node):
             self.start_y = y
             self.last_travel_distance = 0.0
             return
+        
+        self.get_logger().info(
+            f"ODOM: Current position: x={x:.3f}, y={y:.3f} | "
+            f"Start position: x={self.start_x:.3f}, y={self.start_y:.3f}"
+        )
 
         dx = x - self.start_x
         dy = y - self.start_y

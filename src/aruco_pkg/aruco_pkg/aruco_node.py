@@ -111,8 +111,8 @@ class ArucoAlignmentNode(Node):
 
         # Convert to grayscale for ArUco detection
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        cv2.imshow("Frame", gray)
-        cv2.waitKey(1)
+        #cv2.imshow("Frame", gray)
+        #cv2.waitKey(1)
 
         # Detect ArUco markers
         corners, ids, _ = self.detector.detectMarkers(gray)
@@ -178,10 +178,10 @@ class ArucoAlignmentNode(Node):
         # -----------------------------------------------------------
         # Visualization
         # -----------------------------------------------------------
-        cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-        cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
-        cv2.imshow("Aruco Alignment", frame)
-        cv2.waitKey(1)
+        #cv2.aruco.drawDetectedMarkers(frame, corners, ids)
+        #cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
+        #cv2.imshow("Aruco Alignment", frame)
+        #cv2.waitKey(1)
 
         self.get_logger().info(
             f"[Frame {self.frame_num}] ID {marker_id} | "

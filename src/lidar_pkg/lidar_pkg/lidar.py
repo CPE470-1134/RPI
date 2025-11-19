@@ -1,6 +1,5 @@
 import struct
 import sys
-import serial
 import tabulate
 from plotters import PolarPlotter, CartesianPlotter
 

@@ -1,6 +1,6 @@
 import sys
 import serial
-from lidar import LD19Packet, is_header
+from lidar import LD19Packet
 from plotters import CartesianPlotter
 
 
@@ -86,6 +86,7 @@ def display_frame(new_frame):
 def is_header(b : bytes):
     # Index First Byte 
     return b[0] == LD19Packet.HEADER
-        
+
+
 if __name__ == '__main__':
     main()

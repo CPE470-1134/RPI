@@ -1,0 +1,11 @@
+export FASTRTPS_DEFAULT_PROFILES_FILE=/fastrtps_config/super_client_configuration_file.xml
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export ROS_DOMAIN_ID=12
+
+unset FASTRTPS_DEFAULT_PROFILES_FILE
+
+source /opt/ros/humble/setup.bash
+source /root/RPI/install/setup.bash
+# source /root/RPI/.venv/bin/activate
+
+cd RPI

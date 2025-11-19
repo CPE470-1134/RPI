@@ -49,16 +49,16 @@ class ArucoAlignAndApproach(Node):
         )
         self.odom_sub = self.create_subscription(
             Odometry,
-            "/odom",
+            "/odom",    
             self.odom_callback,
             10,
         )
 
         # === Internal state ===
-        self.current_alpha: Optional[float] = None  # latest α (rad)
-        self.current_delta: Optional[float] = None  # latest δ (m)
+        self.current_alpha: Optional[float] = None  # latest alpha (rad)
+        self.current_delta: Optional[float] = None  # latest delta (m)
 
-        self.aligned: bool = False  # have we satisfied |α| < 3° ?
+        self.aligned: bool = False  # have we satisfied |alpha| < 3° ?
 
         # For distance tracking during 2c
         self.approach_started: bool = False
@@ -87,7 +87,13 @@ class ArucoAlignAndApproach(Node):
                 "expected 2 elements [alpha, delta]."
             )
             return
-
+        
+        self.get_logger().info(
+            f"RECEIVED: "
+            f"Alpha: {self.current_alpha} --> {msg.data[0]:.4f} rad "
+            f"({math.degrees(msg.data[0]):.2f} deg), "
+            f"Delta: {self.current_delta} --> {msg.data[1]:.3f} m"
+        )
         self.current_alpha = float(msg.data[0])
         self.current_delta = float(msg.data[1])
 
@@ -95,8 +101,7 @@ class ArucoAlignAndApproach(Node):
         """
         Odometry callback used as encoder‑based feedback for distance.
 
-        The assignment text references wheel encoders; `/odom` already
-        incorporates encoder data, so we use pose changes in the odometry
+        so we use pose changes in the odometry
         frame to estimate how far the robot has traveled during 2c.
         """
         if not self.approach_started:
@@ -138,7 +143,7 @@ class ArucoAlignAndApproach(Node):
 
             if abs(alpha) > self.align_tolerance_rad:
                 # Not yet aligned: apply constant‑magnitude angular velocity
-                # in the direction that reduces α.
+                # in the direction that reduces alpha.
                 twist.angular.z = (
                     self.align_angular_speed if alpha > 0.0 else -self.align_angular_speed
                 )
@@ -158,7 +163,7 @@ class ArucoAlignAndApproach(Node):
             twist.linear.x = 0.0
             self.cmd_vel_pub.publish(twist)
 
-            # Print final alignment error and current δ as required.
+            # Print final alignment error and current delta
             self.get_logger().info(
                 f"[2b] Alignment complete. "
                 f"alpha = {self.current_alpha:.4f} rad "

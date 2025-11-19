@@ -20,20 +20,32 @@ class CameraSubscriber(Node):
             # Convert ROS Image → OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
             
+            
+            # Load ArUco dictionary and parameters
             aruco_dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
             aruco_parameters = cv2.aruco.DetectorParameters_create()
-            corners, marker_ids, rejected = cv2.aruco.detectMarkers(cv_image, aruco_dictionary, parameters=aruco_parameters)
-            if len(corners) > 0:
-                # Draw green bounding box around the detected marker
-                for corner in corners:
-                    pts = corner.reshape((-1, 2))
-                    pts = np.int32(pts)
-                    cv2.polylines(cv_image, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
-                # Draw the center of the marker as a red dot
-                center = np.mean(corners[0][0], axis=0)
-                center = tuple(np.int32(center))
-                cv2.circle(cv_image, center, 5, (0, 0, 255), -1)
-                # Display the marker ID at the top left of the image
+            corners, marker_ids, _ = cv2.aruco.detectMarkers(
+                cv_image, aruco_dictionary, parameters=aruco_parameters
+            )
+
+            # If no markers were detected, skip drawing/saving altogether.
+            if not corners:
+                self.get_logger().debug("No ArUco markers detected in this frame.")
+                return
+
+            # Draw green bounding box around the detected marker(s)
+            for corner in corners:
+                pts = corner.reshape((-1, 2))
+                pts = np.int32(pts)
+                cv2.polylines(cv_image, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
+
+            # Draw the center of the first marker as a red dot
+            center = np.mean(corners[0][0], axis=0)
+            center = tuple(np.int32(center))
+            cv2.circle(cv_image, center, 5, (0, 0, 255), -1)
+
+            # Display the marker ID at the top left of the image
+            if marker_ids is not None:
                 for i in range(len(marker_ids)):
                     cv2.putText(
                         cv_image,
@@ -44,8 +56,7 @@ class CameraSubscriber(Node):
                         (255, 55, 55),
                         2,
                     )
-            #cv2.imshow("Detected Aruco Marker", cv_image)
-            #cv2.waitKey(0)
+
             cv2.imwrite("annotated_image.png", cv_image)
 
             # Display frame

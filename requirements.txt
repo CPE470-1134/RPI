@@ -1,0 +1,5 @@
+numpy
+matplotlib
+tabulate
+opencv-python
+pyserial

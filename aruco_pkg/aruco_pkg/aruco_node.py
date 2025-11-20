@@ -155,7 +155,7 @@ class ArucoAlignmentNode(Node):
         # Compute alpha (bearing) USING PIXEL-BASED METHOD
         # -----------------------------------------------------------
         cX = int(np.mean(marker_corners[0][:, 0]))
-        cX = int(np.mean(marker_corners[0][:, 0]))
+
         alpha_rad   = self.compute_alpha_pixel_based(cX=cX)
         alpha_deg   = math.degrees(alpha_rad)
 

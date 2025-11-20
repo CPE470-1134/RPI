@@ -30,7 +30,7 @@ class AlignRobot(Node):
         super().__init__("align_robot")
 
         # === Alignment config ===
-        self.align_angular_speed = 0.05               # rad/s
+        self.align_angular_speed = 0.005               # rad/s
         self.align_tolerance_rad = math.radians(3.0)  # 3°
 
         # === Internal state ===
@@ -69,8 +69,15 @@ class AlignRobot(Node):
         Incoming data from ArucoAlignmentNode:
         msg.data = [alpha_rad, delta_m]
         """
-        self.current_alpha = float(msg.data[0])
-        self.current_delta = float(msg.data[1])
+        new_alpha = float(msg.data[0])
+        new_delta = float(msg.data[1])
+        
+        if (self.current_alpha != new_alpha) or (self.current_delta != new_delta):
+            
+            self.newPoseReceived = True
+            self.current_alpha = new_alpha
+            self.current_delta = new_delta
+            
 
     # ----------------------------------------------------------------------
     # Main Loop
@@ -85,19 +92,27 @@ class AlignRobot(Node):
         # PHASE 1: ALIGNMENT ONLY
         # ---------------------------------------
         if abs(self.current_alpha) > self.align_tolerance_rad:
+    
             self.aligned = False
-
-            direction = 1.0 if self.current_alpha > 0 else -1.0
+            
+            # Determine rotation direction
+            
+            if self.current_alpha > 0:
+                direction = -1.0  # Rotate CCW
+            else:
+                direction = 1.0  # Rotate CW
+                
             twist.angular.z = direction * self.align_angular_speed
 
             self.get_logger().info(
                 f"[ALIGNING] α={self.current_alpha:.3f} rad "
                 f"({math.degrees(self.current_alpha):.1f}°), δ={self.current_delta:.3f} m"
             )
-
+            
         else:
             self.aligned = True
             twist.angular.z = 0.0
+            #twist.linear.x = 0.0
 
             self.get_logger().info(
                 f"[ALIGNED] α={self.current_alpha:.4f} rad "

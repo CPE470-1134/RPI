@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 import math
 from pathlib import Path
@@ -8,8 +7,8 @@ import cv2
 import numpy as np
 import rclpy
 from rclpy.node import Node
-#from std_msgs.msg import Float32MultiArray
-from aruco_pkg.msg import ArucoAlignment
+from std_msgs.msg import Float32MultiArray
+
 
 
 class ArucoAlignmentNode(Node):
@@ -69,13 +68,13 @@ class ArucoAlignmentNode(Node):
         
         # --- Publisher -----------------------------------------------------
         self.alignment_pub = self.create_publisher(
-            ArucoAlignment,
+            Float32MultiArray,
             "aruco_alignment",
             10,
         )
 
         # --- Timer ---------------------------------------------------------
-        self.timer = self.create_timer(0.1, self._process_frame)  # 10 Hz
+        self.timer = self.create_timer(0.05, self._process_frame)  # 20 Hz
         self.get_logger().info("ArUco alignment node started.")
 
     # ----------------------------------------------------------------------
@@ -91,9 +90,9 @@ class ArucoAlignmentNode(Node):
        """
        
         search_roots = [
-            Path(__file__).resolve().parents[3] /"src" / "camera_pkg" / "camera_pkg",
-            Path(__file__).resolve().parents[3] / "src" / "RPI" / "src",
-            Path(__file__).resolve().parents[3] / "src" / "RPI",
+            Path(__file__).resolve().parents[2] / "camera_pkg" / "camera_pkg",
+            Path(__file__).resolve().parents[2] / "src",
+            Path(__file__).resolve().parents[2],
         ]
         for root in search_roots:
             candidate = root / "calibration_data.npz"
@@ -156,7 +155,8 @@ class ArucoAlignmentNode(Node):
         # Compute alpha (bearing) USING PIXEL-BASED METHOD
         # -----------------------------------------------------------
         cX = int(np.mean(marker_corners[0][:, 0]))
-        alpha_rad   = self.compute_alpha_pixel_based(cX=cX,marker_corners=marker_corners)
+        cX = int(np.mean(marker_corners[0][:, 0]))
+        alpha_rad   = self.compute_alpha_pixel_based(cX=cX)
         alpha_deg   = math.degrees(alpha_rad)
 
         # -----------------------------------------------------------
@@ -192,21 +192,17 @@ class ArucoAlignmentNode(Node):
         # Make ArucoAlignment Message & Publish 
         # -----------------------------------------------------------
 
-        msg = ArucoAlignment()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.marker_id = int(marker_id)
-        msg.alpha = float(alpha_rad)
-        msg.distance = float(delta)
-
-        self.alignment_pub.publish(msg)
-
+        alignment_msg = Float32MultiArray()
+        alignment_msg.data = [alpha_rad, delta]
+        self.alignment_pub.publish(alignment_msg)   
+        
         # -----------------------------------------------------------
         # Visualization
         # -----------------------------------------------------------
-        #cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-        #cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
-        #cv2.imshow("Aruco Alignment", frame)
-        #cv2.waitKey(1) & 0xFF   
+        cv2.aruco.drawDetectedMarkers(frame, corners, ids)
+        cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
+        cv2.imshow("Aruco Alignment", frame)
+        cv2.waitKey(1) & 0xFF   
 
         self.get_logger().info(
             f"HIT: Frame {self.frame_num} | "
@@ -223,18 +219,26 @@ class ArucoAlignmentNode(Node):
     # ============================================================
     # Compute alpha using pixel-based method
     # ============================================================
-    def compute_alpha_pixel_based(self,cX: int,  marker_corners: np.ndarray) -> float:
+    def compute_alpha_pixel_based(self, cX: int) -> float:
         """
-        Compute alpha (bearing) based on pixel offset from image center.
+        Compute alpha (bearing) using pixel offset from image center
         Args:
-            cX (int): X-coordinate of the marker center in pixels.
-            marker_corners (np.ndarray): Corners of the detected marker.
+            cX (int): x-coordinate of the marker center in the image.
+        Returns:
+            float: alpha (bearing) in radians.
         """
+        # Image midpoint
         img_center_x = self.frame_width / 2.0
+
+        # Pixel offset from image center
         pixel_offset = cX - img_center_x
-        alpha_deg = (pixel_offset / self.frame_width) * self.hfov_deg
-        alpha_rad = math.radians(alpha_deg)
-        return alpha_rad
+
+        # Convert to degrees using half-FOV normalization
+        alpha_deg = (pixel_offset / img_center_x) * (self.hfov_deg / 2.0)
+
+        # Convert to radians
+        return math.radians(alpha_deg)
+
     
     # ============================================================
     # Cleanup

@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'robot_control_node = robot_control_pkg.robot_control_node:main'
+            'align_robot = robot_control_pkg.align_robot:main',
+            'approach_marker = robot_control_pkg.approach_marker:main',
         ],
     },
 )

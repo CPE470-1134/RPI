@@ -31,7 +31,7 @@ class AlignRobot(Node):
 
         # === Alignment config ===
         self.align_angular_speed = 0.005               # rad/s
-        self.align_tolerance_rad = math.radians(3.0)  # 3°
+        self.align_tolerance_rad = math.radians(3.0)  # 3 degrees in radians
 
         # === Internal state ===
         self.current_alpha: Optional[float] = None
@@ -125,7 +125,7 @@ class AlignRobot(Node):
         # Publish alignment info to be used by ApproachMarker
         msg = Float32MultiArray()
         msg.data = [
-            1.0 if self.aligned else 0.0,
+            float(self.aligned), # 0.0 or 1.0 (aligned flag)
             self.current_alpha,
             self.current_delta
         ]

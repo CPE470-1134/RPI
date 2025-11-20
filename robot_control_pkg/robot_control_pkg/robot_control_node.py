@@ -7,8 +7,10 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float32MultiArray
+f
+#from std_msgs.msg import Float32MultiArray
 
+from aruco_pkg.msg import ArucoAlignment
 
 class ArucoAlignAndApproach(Node):
     """
@@ -41,12 +43,14 @@ class ArucoAlignAndApproach(Node):
 
         # === Publishers & subscribers ===
         self.cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
+        
         self.alignment_sub = self.create_subscription(
-            Float32MultiArray,
+            ArucoAlignment,
             "aruco_alignment",
             self.alignment_callback,
             10,
         )
+
         self.odom_sub = self.create_subscription(
             Odometry,
             "/odom",    
@@ -72,30 +76,24 @@ class ArucoAlignAndApproach(Node):
         self.get_logger().info("ArucoAlignAndApproach node started (2b & 2c).")
 
     # === Subscribers =====================================================
-
-    def alignment_callback(self, msg: Float32MultiArray) -> None:
+    def alignment_callback(self, msg: ArucoAlignment) -> None:
         """
-        Callback for alignment feedback (Question 2a output).
+        Callback for alignment data from the ArUco detection node.
 
-        Expects:
-        - msg.data[0] = alpha (rad)
-        - msg.data[1] = delta (m)
+        Fields:
+        - msg.marker_id  (int)
+        - msg.alpha      (float, rad)
+        - msg.distance   (float, m)
         """
-        if len(msg.data) < 2:
-            self.get_logger().warn(
-                "Received alignment message with insufficient length; "
-                "expected 2 elements [alpha, delta]."
-            )
-            return
-        
         self.get_logger().info(
-            f"RECEIVED: "
-            f"Alpha: {self.current_alpha} --> {msg.data[0]:.4f} rad "
-            f"({math.degrees(msg.data[0]):.2f} deg), "
-            f"Delta: {self.current_delta} --> {msg.data[1]:.3f} m"
+            f"RECEIVED: Marker ID {msg.marker_id}, "
+            f"Alpha: {msg.alpha:.4f} rad ({math.degrees(msg.alpha):.2f} deg), "
+            f"Delta: {msg.distance:.3f} m"
         )
-        self.current_alpha = float(msg.data[0])
-        self.current_delta = float(msg.data[1])
+
+        self.current_alpha = float(msg.alpha)
+        self.current_delta = float(msg.distance)
+
 
     def odom_callback(self, msg: Odometry) -> None:
         """

@@ -1,0 +1,42 @@
+<dds>
+  <profiles>
+    <participant profile_name="super_client_profile" is_default_profile="true">
+      <rtps>
+        <name>docker_super_client</name>
+
+        <builtin>
+          <discovery_config>
+            <!-- Required for Create3 Discovery Server mode -->
+            <discoveryProtocol>SUPER_CLIENT</discoveryProtocol>
+
+            <discoveryServersList>
+              <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                <metatrafficUnicastLocatorList>
+                  <locator>
+                    <udpv4>
+                      <address>192.168.186.3</address>
+                      <port>11811</port>
+                    </udpv4>
+                  </locator>
+                </metatrafficUnicastLocatorList>
+              </RemoteServer>
+            </discoveryServersList>
+          </discovery_config>
+        </builtin>
+
+        <!-- Required to ensure ROS 2 works reliably through the server -->
+        <useBuiltinTransports>true</useBuiltinTransports>
+
+        <defaultUnicastLocatorList>
+          <locator>
+            <udpv4>
+              <address>0.0.0.0</address>
+            </udpv4>
+          </locator>
+        </defaultUnicastLocatorList>
+
+      </rtps>
+    </participant>
+  </profiles>
+</dds>
+

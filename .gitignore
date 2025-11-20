@@ -1,6 +1,23 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# ROS2 build/install/log
 build/
 install/
 log/
-__pycache__/
-.venv/
+
+# VSCode
+.vscode/
+
+# Backup
 OLD_BACKUP/
+
+# Camera calibration artifacts
+*.npz
+
+# ArUco frame outputs
+aruco_frames/
+

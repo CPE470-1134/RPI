@@ -93,6 +93,8 @@ class ApproachMarker(Node):
         y = msg.pose.pose.position.y
 
         if self.start_x is None:
+            self.start_x = x
+            self.start_y = y
             return
 
         self.traveled = math.sqrt((x - self.start_x)**2 + (y - self.start_y)**2)
@@ -117,15 +119,10 @@ class ApproachMarker(Node):
         if not self.approach_started:
             self.start_x = None
             self.start_y = None
-            self.traveled = 0.0
+            #self.traveled = 0.0
 
             self.approach_started = True
             self.get_logger().info("[APPROACH] Alignment confirmed, starting forward motion.")
-
-        # Need odom to initialize start point
-        if self.start_x is None:
-            # First odom message will set starting point
-            return
 
         twist = Twist()
 
@@ -134,27 +131,36 @@ class ApproachMarker(Node):
         # ---------------------------------------------------------
         if self.traveled < self.target_distance:
             twist.linear.x = self.forward_speed
-
+            twist.angular.z = 0.0
+            # Publish velocity
+            self.cmd_pub.publish(twist)
+            
             self.get_logger().info(
                 f"[MOVING] Traveled = {self.traveled:.3f} m / {self.target_distance:.2f} m "
                 f"(delta = {self.delta:.3f} m)"
             )
 
         else:
-            twist.linear.x = 0.0
+            # Arrived at target distance
             self.approach_completed = True
-
-            self.get_logger().info(
-                f"[COMPLETE] Moved {self.traveled:.3f} m toward marker. "
-                f"Final δ = {self.delta:.3f} m."
-            )
-
-        # Publish velocity
-        self.cmd_pub.publish(twist)
+            self.get_logger().info("[STOPPED] Target distance reached.")
+            
+            # Ensure robot is stopped, does not populate cmd_vel buffer
+            if not self.final_state_sent:
+                self.stop_robot()
+                self.final_state_sent = True
+                
+            return
+        
 
     # ----------------------------------------------------------------------
     def stop_robot(self):
-        self.cmd_pub.publish(Twist())
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
+        self.get_logger().info("Stopping robot. Final cmd_vel published.")
+        self.cmd_pub.publish(twist)
+  
 
 
 def main(args=None):

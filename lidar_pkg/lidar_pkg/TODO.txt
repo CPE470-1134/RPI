@@ -1,3 +1,0 @@
-- Implement CRC Validation
-- Fix Pop up of Scan Plot + Dyamic Animated Update
-- Save Every 360 Scan up to K scans

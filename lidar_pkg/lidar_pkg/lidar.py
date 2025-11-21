@@ -1,7 +1,7 @@
 import struct
 import sys
 import tabulate
-from .plotters import PolarPlotter, CartesianPlotter
+from plotters import PolarPlotter, CartesianPlotter
 
 
 CRC_TABLE =[

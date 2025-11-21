@@ -1,9 +1,9 @@
 import sys
 import serial
 import numpy as np
-from .lidar import LD19Packet
-from .plotters import CartesianPlotter
-from .opening_detector import PointCloud, get_opening
+from lidar import LD19Packet
+from plotters import CartesianPlotter, visualize_opening
+from opening_detector import PointCloud, get_opening
 
 
 PORT = "/dev/ttyUSB0"
@@ -20,20 +20,19 @@ DETECT_OPENING = True  # Set to True to enable opening detection
 def handle_rotation_completion(scan_count, rotation_points, point_cloud):
     scan_count += 1
 
-    if DETECT_OPENING and point_cloud is not None:
-        # Add points to cloud
-        for pt in rotation_points:
-            point_cloud.add_point(pt.distance, pt.intensity, pt.angle)
+    # Add points to cloud
+    for pt in rotation_points:
+        point_cloud.add_point(pt.distance, pt.intensity, pt.angle)
 
-        print(f"Scan {scan_count} complete: {len(rotation_points)} points collected")
+    print(f"Scan {scan_count} complete: {len(rotation_points)} points collected")
 
-        # Check if we have enough scans
-        if scan_count >= AGGREGATION_SCANS:
-            print(f"\n✓ Aggregated {scan_count} scans with {point_cloud.size()} points")
-            print("Detecting opening...")
+    # Check if we have enough scans
+    if scan_count >= AGGREGATION_SCANS:
+        print(f"\n✓ Aggregated {scan_count} scans with {point_cloud.size()} points")
+        print("Detecting opening...")
 
-            detect_and_print_opening(point_cloud)
-            return scan_count, True  # Signal to exit
+        detect_and_visualize_opening(point_cloud, update_plot=False, save_visualization=True)
+        return scan_count, True  # Signal to exit
 
     return scan_count, False
 
@@ -46,12 +45,38 @@ def detect_and_print_opening(point_cloud):
         print(f"\n{'='*70}")
         print(f"✓ Opening Detected! (Discontinuity: {gap_size:.0f} mm)")
         print(f"{'='*70}")
-        print(f"Edge Point 1: ({point1['x']:.1f}, {point1['y']:.1f}) @ {point1['angle']:.1f}°")
-        print(f"Edge Point 2: ({point2['x']:.1f}, {point2['y']:.1f}) @ {point2['angle']:.1f}°")
+        print(f"Edge Point 1: ({point1['x']:.1f}, {point1['y']:.1f})")
+        print(f"Edge Point 2: ({point2['x']:.1f}, {point2['y']:.1f})")
         print(f"{'='*70}\n")
     else:
         print("ERROR: Could not detect opening")
+        
+    cartesian_plot = CartesianPlotter()
+    cartesian_plot.update(point_cloud.points)
+    
+def detect_and_visualize_opening(point_cloud, update_plot=False, save_visualization=True):
+    opening_result = get_opening(point_cloud)
 
+    if opening_result is not None:
+        p1, p2, gap_size = opening_result
+
+        print("=" * 70)
+        print(f"✓ Opening Detected! Discontinuity = {gap_size:.0f} mm")
+        print("=" * 70)
+        print(f"Edge Point 1: ({p1['x']:.1f}, {p1['y']:.1f})")
+        print(f"Edge Point 2: ({p2['x']:.1f}, {p2['y']:.1f})")
+        print("=" * 70 + "\n")
+
+    else:
+        print("ERROR: Could not detect opening")
+
+    #if update_plot:
+        #cartesian_plot = CartesianPlotter()
+        #cartesian_plot.update(point_cloud.points)
+    
+    if save_visualization:
+        # Delegate plotting
+        visualize_opening(point_cloud, opening_result,filename="opening_detection.png")
 
 def handle_visualization_update(scan_count, rotation_points, cartesian_plot_manager):
     if scan_count >= 25 and not DETECT_OPENING:
@@ -64,26 +89,38 @@ def handle_visualization_update(scan_count, rotation_points, cartesian_plot_mana
 
 def process_lidar_frame(new_frame, rotation_points, scan_count, last_angle, point_cloud, cartesian_plot_manager):
     should_exit = False
-    last_angle = new_frame.start_angle
-
+    
+    if last_angle is None:
+        last_angle = new_frame.start_angle
+    #last_angle = new_frame.start_angle
     # Detect rotation completion
     if new_frame.start_angle < last_angle:
+        
+        print("Rotation complete.")
         scan_count, should_exit = handle_rotation_completion(scan_count, rotation_points, point_cloud)
-        if should_exit:
-            return rotation_points, scan_count, last_angle, True
-        rotation_points = []
 
+        # Clear accumulated points for next rotation
+        rotation_points = []    
+        
+        
+    # Set last_angle to the end angle of the new frame
+    last_angle = new_frame.end_angle
+    
     # Update visualization (if not doing opening detection)
-    scan_count, rotation_points = handle_visualization_update(scan_count, rotation_points, cartesian_plot_manager)
+    #scan_count, rotation_points = handle_visualization_update(scan_count, rotation_points, cartesian_plot_manager)
 
     # Accumulate points
+    #
+    #print("Adding points from new frame:", len(new_frame.LDPoints))
+    #print("Points:", [ (pt.angle, pt.distance) for pt in new_frame.LDPoints ])
+    
     rotation_points.extend(new_frame.LDPoints)
 
     # Log frame info
-    print(f"Frame - Start: {new_frame.start_angle:.1f}°, End: {new_frame.end_angle:.1f}°, "
-          f"Speed: {new_frame.speed / 64.0:.1f} RPM, Points: {len(rotation_points)}")
+    #print(f"Frame - Start: {new_frame.start_angle:.1f}°, End: {new_frame.end_angle:.1f}°, "
+          #f"Speed: {new_frame.speed / 64.0:.1f} RPM, Points: {len(rotation_points)}")
 
-    return rotation_points, scan_count, last_angle, False
+    return rotation_points, scan_count, last_angle, should_exit
 
 
 def parse_serial(ser):
@@ -125,11 +162,20 @@ def main():
                 if new_frame is None:
                     continue
 
+                # Process Lidar_Frame
+                # Accumulate points, check for rotation completion, and append to point cloud
+                # detect opening if enough scans aggregated, print results
                 rotation_points, scan_count, last_angle, should_exit = process_lidar_frame(
                     new_frame, rotation_points, scan_count, last_angle, point_cloud, cartesian_plot_manager
                 )
+                
+                #print("Processed frame - New Size of rotation points:", len(rotation_points))
+                #print("Scan Count:", scan_count)
+                #print("--------------------------------")
+
 
                 if should_exit:
+    
                     return
 
     except KeyboardInterrupt:

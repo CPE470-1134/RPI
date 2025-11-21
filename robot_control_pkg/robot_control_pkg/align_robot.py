@@ -37,6 +37,8 @@ class AlignRobot(Node):
         self.current_alpha: Optional[float] = None
         self.current_delta: Optional[float] = None
         self.aligned: bool = False
+        self.final_state_sent: bool = False
+
 
         # === Publishers ===
         self.cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -90,12 +92,15 @@ class AlignRobot(Node):
             return
 
         twist = Twist()
+        
 
         # ---------------------------------------
         # PHASE 1: ALIGNMENT ONLY
         # ---------------------------------------
         if abs(self.current_alpha) > self.align_tolerance_rad:
     
+            # Reset flag (in case we lose alignment)
+            self.final_state_sent = False
             self.aligned = False
             
             # Determine rotation direction
@@ -116,14 +121,23 @@ class AlignRobot(Node):
             self.aligned = True
             twist.angular.z = 0.0
             #twist.linear.x = 0.0
+            
+            if not self.final_state_sent:
+                self.get_logger().info("✓ Alignment within tolerance achieved.")
+                self.cmd_vel_pub.publish(twist)  # Ensure robot is stopped
+                self.final_state_sent = True
 
+
+            
+    
             self.get_logger().info(
                 f"[ALIGNED] α={self.current_alpha:.4f} rad "
                 f"({math.degrees(self.current_alpha):.2f}°), δ={self.current_delta:.3f} m"
             )
 
-        # Publish cmd_vel
-        self.cmd_vel_pub.publish(twist)
+        # Publish cmd_vel if not aligned
+        if not self.aligned:
+            self.cmd_vel_pub.publish(twist)
 
         # Publish alignment info to be used by ApproachMarker
         msg = Float32MultiArray()

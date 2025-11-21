@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from abc import ABC, abstractmethod
+import os
+from pathlib import Path
 
 class BasePlotter(ABC):
     """A base class for creating Lidar plots."""
@@ -76,6 +78,9 @@ class PolarPlotter(BasePlotter):
 
 class CartesianPlotter(BasePlotter):
     """A plotter for creating Cartesian Lidar plots."""
+    
+    def __init__(self):
+        super().__init__("Lidar Scan (Cartesian)")
 
     def _init_plot(self):
         
@@ -106,5 +111,67 @@ class CartesianPlotter(BasePlotter):
         self.scat.set_array(intensities)
         self.ax.figure.canvas.draw()
         self.ax.figure.canvas.flush_events()
+        plt.pause(0.01)
 
+def visualize_opening(point_cloud, opening_result, filename="opening_detection.png"):
+    """
+    Clean plot of LD19 aggregated point cloud with annotated opening.
+    """
 
+    plt.style.use("bmh")
+
+    # Extract data arrays
+    xs = np.array([p['x'] for p in point_cloud.points])
+    ys = np.array([p['y'] for p in point_cloud.points])
+    intens = np.array([p['intensity'] for p in point_cloud.points])
+
+    # ----------------------------------------------------------
+    # Create figure
+    # ----------------------------------------------------------
+    fig, ax = plt.subplots(figsize=(9, 9))
+    ax.set_aspect("equal")
+    ax.set_title("LD19 Aggregated Scan + Opening Detection")
+    ax.set_xlabel("X (mm)")
+    ax.set_ylabel("Y (mm)")
+    ax.grid(True, linestyle='--', alpha=0.7)
+
+    # Scatter all points
+    sc = ax.scatter(xs, ys, c=intens, s=12, cmap="viridis", edgecolor="none")
+    plt.colorbar(sc, label="Intensity")
+
+    # ----------------------------------------------------------
+    # Handle opening annotation
+    # ----------------------------------------------------------
+    if opening_result:
+        p1, p2, gap = opening_result
+
+        # Extract coordinates
+        x1, y1, d1 = p1['x'], p1['y'], p1['distance']
+        x2, y2, d2 = p2['x'], p2['y'], p2['distance']
+
+        # Draw the opening line
+        ax.plot([x1, x2], [y1, y2], "r-", linewidth=3, label=f"Opening: {gap:.0f} mm")
+        ax.legend(loc="upper right")
+
+        # Opening endpoints in a list for reuse
+        edge_points = [(x1, y1, d1, "p1"), (x2, y2, d2, "p2")]
+
+        # Annotate both edges in one loop
+        for x, y, dist, tag in edge_points:
+            ax.scatter([x], [y], c="red", marker="x", s=70)
+            ax.text(
+                x, y,
+                f"({x:.0f}, {y:.0f})\n Dist: {dist:.0f} mm",
+                fontsize=5, color="darkred", weight="bold",
+                ha="left" if tag == "p1" else "right",
+                va="bottom" if tag == "p1" else "top",
+                bbox=dict(facecolor="white", alpha=0.8)
+            )
+
+    # ----------------------------------------------------------
+    # Save image
+    # ----------------------------------------------------------
+    fig.savefig(filename, dpi=300, bbox_inches="tight")
+    print(f"\n✓ LiDAR annotated plot saved: {filename}\n")
+
+    plt.show(block=False)

@@ -40,37 +40,35 @@ class PointCloud:
         return len(self.points)
 
 
+
+
 def get_opening(point_cloud):
-    if point_cloud.size() < 10:
+    if point_cloud.size() < 50:
         print("ERROR: Insufficient points in cloud")
         return None
 
-    sorted_points = point_cloud.get_sorted_by_angle()
+    pts = point_cloud.get_sorted_by_angle()
 
-    # Find the largest gap/discontinuity
     max_gap = 0
-    gap_edge1_idx = -1
-    gap_edge2_idx = -1
+    gap_p1 = None
+    gap_p2 = None
 
-    for i in range(len(sorted_points)):
-        current = sorted_points[i]
-        next_point = sorted_points[(i + 1) % len(sorted_points)]
+    for i in range(len(pts)):
+        p1 = pts[i]
+        p2 = pts[(i + 1) % len(pts)]
 
-        # Calculate distance jump between consecutive angle positions
-        distance_diff = abs(next_point['distance'] - current['distance'])
+        # Compute true geometric gap
+        dx = p2['x'] - p1['x']
+        dy = p2['y'] - p1['y']
+        gap = np.sqrt(dx*dx + dy*dy)
 
-        if distance_diff > max_gap:
-            max_gap = distance_diff
-            gap_edge1_idx = i
-            gap_edge2_idx = (i + 1) % len(sorted_points)
+        if gap > max_gap:
+            max_gap = gap
+            gap_p1 = p1
+            gap_p2 = p2
 
-    # Verify gap is significant
     if max_gap < DISCONTINUITY_THRESHOLD_MM:
-        print(f"WARNING: Max discontinuity ({max_gap:.0f}mm) below threshold ({DISCONTINUITY_THRESHOLD_MM}mm)")
+        print(f"No opening found (max gap {max_gap:.1f} < threshold {DISCONTINUITY_THRESHOLD_MM})")
         return None
 
-    # Extract edge points
-    point1 = sorted_points[gap_edge1_idx]
-    point2 = sorted_points[gap_edge2_idx]
-
-    return (point1, point2, max_gap)
+    return gap_p1, gap_p2, max_gap

@@ -1,7 +1,9 @@
 import sys
 import serial
+import numpy as np
 from .lidar import LD19Packet
 from .plotters import CartesianPlotter
+from .opening_detector import PointCloud, get_opening
 
 
 PORT = "/dev/ttyUSB0"
@@ -10,56 +12,130 @@ if sys.platform == "darwin":
 
 BAUD = 230400
 
+# Configuration
+AGGREGATION_SCANS = 5  # Number of complete 360° rotations to aggregate
+DETECT_OPENING = True  # Set to True to enable opening detection
+
+
+def handle_rotation_completion(scan_count, rotation_points, point_cloud):
+    scan_count += 1
+
+    if DETECT_OPENING and point_cloud is not None:
+        # Add points to cloud
+        for pt in rotation_points:
+            point_cloud.add_point(pt.distance, pt.intensity, pt.angle)
+
+        print(f"Scan {scan_count} complete: {len(rotation_points)} points collected")
+
+        # Check if we have enough scans
+        if scan_count >= AGGREGATION_SCANS:
+            print(f"\n✓ Aggregated {scan_count} scans with {point_cloud.size()} points")
+            print("Detecting opening...")
+
+            detect_and_print_opening(point_cloud)
+            return scan_count, True  # Signal to exit
+
+    return scan_count, False
+
+
+def detect_and_print_opening(point_cloud):
+    result = get_opening(point_cloud)
+
+    if result is not None:
+        point1, point2, gap_size = result
+        print(f"\n{'='*70}")
+        print(f"✓ Opening Detected! (Discontinuity: {gap_size:.0f} mm)")
+        print(f"{'='*70}")
+        print(f"Edge Point 1: ({point1['x']:.1f}, {point1['y']:.1f}) @ {point1['angle']:.1f}°")
+        print(f"Edge Point 2: ({point2['x']:.1f}, {point2['y']:.1f}) @ {point2['angle']:.1f}°")
+        print(f"{'='*70}\n")
+    else:
+        print("ERROR: Could not detect opening")
+
+
+def handle_visualization_update(scan_count, rotation_points, cartesian_plot_manager):
+    if scan_count >= 25 and not DETECT_OPENING:
+        print(f"Updating plot - Scan count: {scan_count}")
+        cartesian_plot_manager.update(rotation_points)
+        return 0, []
+
+    return scan_count, rotation_points
+
+
+def process_lidar_frame(new_frame, rotation_points, scan_count, last_angle, point_cloud, cartesian_plot_manager):
+    should_exit = False
+    last_angle = new_frame.start_angle
+
+    # Detect rotation completion
+    if new_frame.start_angle < last_angle:
+        scan_count, should_exit = handle_rotation_completion(scan_count, rotation_points, point_cloud)
+        if should_exit:
+            return rotation_points, scan_count, last_angle, True
+        rotation_points = []
+
+    # Update visualization (if not doing opening detection)
+    scan_count, rotation_points = handle_visualization_update(scan_count, rotation_points, cartesian_plot_manager)
+
+    # Accumulate points
+    rotation_points.extend(new_frame.LDPoints)
+
+    # Log frame info
+    print(f"Frame - Start: {new_frame.start_angle:.1f}°, End: {new_frame.end_angle:.1f}°, "
+          f"Speed: {new_frame.speed / 64.0:.1f} RPM, Points: {len(rotation_points)}")
+
+    return rotation_points, scan_count, last_angle, False
+
+
+def parse_serial(ser):
+    # Read until header is found
+    b = ser.read()
+    if not is_header(b):
+        return None
+
+    # Read remaining frame bytes
+    frame_data = bytes([b[0]]) + ser.read(LD19Packet.FRAME_SIZE - 1)
+
+    try:
+        return LD19Packet(raw=frame_data)
+    except ValueError as e:
+        print(f"Error parsing frame: {e}")
+        return None
+
 
 def main():
     print("Starting LiDAR Node...")
-    
+
     # Initialize the plotter
     cartesian_plot_manager = CartesianPlotter()
+
+    # Initialize point cloud for opening detection
+    point_cloud = PointCloud() if DETECT_OPENING else None
+
     rotation_points = []
     last_angle = 0
     scan_count = 0
-    
+
     try:
         with serial.Serial(PORT, BAUD, timeout=1) as ser:
             print(f"Opened serial port: {ser.name}")
-            
+
             while True:
-                # Read until header is found
-                b = ser.read()
-                if is_header(b):
-                    # Read remaining frame bytes
-                    frame_data = bytes([b[0]]) + ser.read(LD19Packet.FRAME_SIZE - 1)
-                    
-                    try:
-                        new_frame = LD19Packet(raw=frame_data)
-                        
-                        # Detect new rotation (360° scan complete)
-                        if new_frame.start_angle < last_angle:
-                            scan_count += 1
-                        
-                        # Update plot every 25 scans
-                        if scan_count >= 25:
-                            print(f"Updating plot - Scan count: {scan_count}")
-                            cartesian_plot_manager.update(rotation_points)
-                            scan_count = 0
-                            rotation_points = []
-                        
-                        # Accumulate points
-                        rotation_points.extend(new_frame.LDPoints)
-                        last_angle = new_frame.start_angle
-                        
-                        # Display frame info
-                        print(f"Frame - Start: {new_frame.start_angle:.1f}°, End: {new_frame.end_angle:.1f}°, "
-                              f"Speed: {new_frame.speed / 64.0:.1f} RPM, Points: {len(rotation_points)}")
-                        
-                    except ValueError as e:
-                        print(f"Error parsing frame: {e}")
-                        continue
-                        
+                new_frame = parse_serial(ser)
+
+                if new_frame is None:
+                    continue
+
+                rotation_points, scan_count, last_angle, should_exit = process_lidar_frame(
+                    new_frame, rotation_points, scan_count, last_angle, point_cloud, cartesian_plot_manager
+                )
+
+                if should_exit:
+                    return
+
     except KeyboardInterrupt:
         print("\nStopping LiDAR Node...")
-        cartesian_plot_manager.close()
+        if not DETECT_OPENING:
+            cartesian_plot_manager.close()
     except serial.SerialException as e:
         print(f"Serial port error: {e}")
     except Exception as e:
@@ -81,10 +157,10 @@ def display_frame(new_frame):
         print(f"Point {i}: Distance (mm): {pt.distance}, Intensity: {pt.intensity}")
     print("CRC: " + str(new_frame.crc))
     print("--------------------------------")
-    
+
 
 def is_header(b : bytes):
-    # Index First Byte 
+    # Index First Byte
     return b[0] == LD19Packet.HEADER
 
 

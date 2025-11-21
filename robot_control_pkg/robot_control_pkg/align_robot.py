@@ -72,11 +72,14 @@ class AlignRobot(Node):
         new_alpha = float(msg.data[0])
         new_delta = float(msg.data[1])
         
-        if (self.current_alpha != new_alpha) or (self.current_delta != new_delta):
+        self.current_alpha = new_alpha
+        self.current_delta = new_delta
+        
+        #if (self.current_alpha != new_alpha) or (self.current_delta != new_delta):
             
-            self.newPoseReceived = True
-            self.current_alpha = new_alpha
-            self.current_delta = new_delta
+            #self.newPoseReceived = True
+            #self.current_alpha = new_alpha
+            #self.current_delta = new_delta
             
 
     # ----------------------------------------------------------------------

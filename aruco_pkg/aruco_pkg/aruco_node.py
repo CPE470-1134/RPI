@@ -199,10 +199,10 @@ class ArucoAlignmentNode(Node):
         # -----------------------------------------------------------
         # Visualization
         # -----------------------------------------------------------
-        cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-        cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
-        cv2.imshow("Aruco Alignment", frame)
-        cv2.waitKey(1) & 0xFF   
+        #cv2.aruco.drawDetectedMarkers(frame, corners, ids)
+        #cv2.drawFrameAxes(frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, self.marker_length)
+        #cv2.imshow("Aruco Alignment", frame)
+        #cv2.waitKey(1) & 0xFF   
 
         self.get_logger().info(
             f"HIT: Frame {self.frame_num} | "

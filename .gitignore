@@ -9,6 +9,7 @@ build/
 install/
 log/
 
+
 # VSCode
 .vscode/
 
@@ -20,4 +21,4 @@ OLD_BACKUP/
 
 # ArUco frame outputs
 aruco_frames/
-
+scratch/

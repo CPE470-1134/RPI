@@ -4,16 +4,10 @@ import math
 from typing import Optional
 
 import rclpy
-from rclpy.node import Node
-
 from geometry_msgs.msg import Twist
+from rclpy.node import Node
+from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from std_msgs.msg import Float32MultiArray
-
-from rclpy.qos import (
-    QoSProfile,
-    QoSReliabilityPolicy,
-    QoSHistoryPolicy
-)
 
 
 class AlignRobot(Node):
@@ -30,7 +24,7 @@ class AlignRobot(Node):
         super().__init__("align_robot")
 
         # === Alignment config ===
-        self.align_angular_speed = 0.005               # rad/s
+        self.align_angular_speed = 0.005  # rad/s
         self.align_tolerance_rad = math.radians(3.0)  # 3 degrees in radians
 
         # === Internal state ===
@@ -38,7 +32,6 @@ class AlignRobot(Node):
         self.current_delta: Optional[float] = None
         self.aligned: bool = False
         self.final_state_sent: bool = False
-
 
         # === Publishers ===
         self.cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -51,11 +44,9 @@ class AlignRobot(Node):
             reliability=QoSReliabilityPolicy.RELIABLE,
         )
 
+        # SUBSCRIBER - /aruco_alignment
         self.align_sub = self.create_subscription(
-            Float32MultiArray,
-            "/aruco_alignment",
-            self.alignment_callback,
-            align_qos
+            Float32MultiArray, "/aruco_alignment", self.alignment_callback, align_qos
         )
 
         # Control loop at 20 Hz
@@ -73,16 +64,15 @@ class AlignRobot(Node):
         """
         new_alpha = float(msg.data[0])
         new_delta = float(msg.data[1])
-        
+
         self.current_alpha = new_alpha
         self.current_delta = new_delta
-        
-        #if (self.current_alpha != new_alpha) or (self.current_delta != new_delta):
-            
-            #self.newPoseReceived = True
-            #self.current_alpha = new_alpha
-            #self.current_delta = new_delta
-            
+
+        # if (self.current_alpha != new_alpha) or (self.current_delta != new_delta):
+
+        # self.newPoseReceived = True
+        # self.current_alpha = new_alpha
+        # self.current_delta = new_delta
 
     # ----------------------------------------------------------------------
     # Main Loop
@@ -92,44 +82,40 @@ class AlignRobot(Node):
             return
 
         twist = Twist()
-        
 
         # ---------------------------------------
         # PHASE 1: ALIGNMENT ONLY
         # ---------------------------------------
         if abs(self.current_alpha) > self.align_tolerance_rad:
-    
+
             # Reset flag (in case we lose alignment)
             self.final_state_sent = False
             self.aligned = False
-            
+
             # Determine rotation direction
-            
+
             if self.current_alpha > 0:
                 direction = -1.0  # Rotate CCW
             else:
                 direction = 1.0  # Rotate CW
-                
+
             twist.angular.z = direction * self.align_angular_speed
 
             self.get_logger().info(
                 f"[ALIGNING] α={self.current_alpha:.3f} rad "
                 f"({math.degrees(self.current_alpha):.1f}°), δ={self.current_delta:.3f} m"
             )
-            
+
         else:
             self.aligned = True
             twist.angular.z = 0.0
-            #twist.linear.x = 0.0
-            
+            # twist.linear.x = 0.0
+
             if not self.final_state_sent:
                 self.get_logger().info("✓ Alignment within tolerance achieved.")
                 self.cmd_vel_pub.publish(twist)  # Ensure robot is stopped
                 self.final_state_sent = True
 
-
-            
-    
             self.get_logger().info(
                 f"[ALIGNED] α={self.current_alpha:.4f} rad "
                 f"({math.degrees(self.current_alpha):.2f}°), δ={self.current_delta:.3f} m"
@@ -142,9 +128,9 @@ class AlignRobot(Node):
         # Publish alignment info to be used by ApproachMarker
         msg = Float32MultiArray()
         msg.data = [
-            float(self.aligned), # 0.0 or 1.0 (aligned flag)
+            float(self.aligned),  # 0.0 or 1.0 (aligned flag)
             self.current_alpha,
-            self.current_delta
+            self.current_delta,
         ]
         self.align_pub.publish(msg)
 

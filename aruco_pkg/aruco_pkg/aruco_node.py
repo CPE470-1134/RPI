@@ -211,8 +211,8 @@ class ArucoAlignmentNode(Node):
         
         save_every_n_hits= 50
         # Save every nth hit frame
-        #if self.hit_count % save_every_n_hits == 0:
-            #self.save_frame(frame, self.aruco_frame_save_path / f"aruco_id_{ids[0][0]}_delta_cm_{int(delta*100)}.png")
+        if self.hit_count % save_every_n_hits == 0:
+            self.save_frame(frame, self.aruco_frame_save_path / f"aruco_id_{ids[0][0]}_delta_cm_{int(delta*100)}.png")
         
     # ============================================================
     # Compute alpha using pixel-based method

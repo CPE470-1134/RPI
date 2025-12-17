@@ -9,7 +9,6 @@ Launches all nodes in the proper sequence:
 """
 
 import os
-import sys
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
@@ -18,9 +17,6 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """Generate the launch description for the mission."""
 
-    # Get the directory where this launch file is located
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
     # Environment variables to pass to nodes
     env = os.environ.copy()
 
@@ -28,52 +24,52 @@ def generate_launch_description():
         [
             # --- Hardware / Sensor Layer ---
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "driver_node.py")],
+                package="architecture",
+                executable="driver_node",
                 name="driver_node",
                 output="screen",
                 env=env,
             ),
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "lidar_node.py")],
+                package="architecture",
+                executable="lidar_node",
                 name="lidar_node",
                 output="screen",
                 env=env,
             ),
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "aruco_node.py")],
+                package="architecture",
+                executable="aruco_node",
                 name="aruco_node",
                 output="screen",
                 env=env,
             ),
             # --- Perception & Safety Layer ---
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "localizer_node.py")],
+                package="architecture",
+                executable="localizer_node",
                 name="localizer_node",
                 output="screen",
                 env=env,
             ),
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "safety_node.py")],
+                package="architecture",
+                executable="safety_node",
                 name="safety_node",
                 output="screen",
                 env=env,
             ),
             # --- Decision & Control Layer ---
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "controller_node.py")],
+                package="architecture",
+                executable="controller_node",
                 name="controller_node",
                 output="screen",
                 env=env,
             ),
             Node(
-                executable=sys.executable,
-                arguments=[os.path.join(script_dir, "director_node.py")],
+                package="architecture",
+                executable="director_node",
                 name="director_node",
                 output="screen",
                 env=env,

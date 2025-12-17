@@ -62,6 +62,8 @@ from std_msgs.msg import String
 from std_srvs.srv import Trigger, Empty
 import numpy as np
 
+from custom_interfaces.msg import ArucoMarkerArray
+
 # Import geometry utilities
 from localization_geometry import LocalizationGeometry, MarkerObservation, ArenaPose
 
@@ -225,7 +227,7 @@ class LocalizerNode(Node):
         - /odom: Odometry for integration
         """
         self.create_subscription(
-            Odometry,  # Will be custom_msgs/ArucoMarkerArray when created
+            ArucoMarkerArray,
             '/aruco/marker_info',
             self._aruco_callback,
             10
@@ -340,7 +342,7 @@ class LocalizerNode(Node):
     # Subscriber Callbacks
     # ========================================================================
 
-    def _aruco_callback(self, msg) -> None:
+    def _aruco_callback(self, msg: ArucoMarkerArray) -> None:
         """
         Process ArUco marker detections
 
@@ -349,26 +351,21 @@ class LocalizerNode(Node):
 
         Stores observations and optionally corrects pose if localized
         """
-        # TODO: Parse actual ArucoMarkerArray message when defined
-        # For now, assume msg has: msg.markers[i].marker_id, .bearing_rad, .distance_m
-
         current_time = time.time()
 
         # Store each marker observation
-        # for marker in msg.markers:
-        #     if marker.marker_id in self.marker_positions:
-        #         obs = MarkerObservation(
-        #             marker.marker_id,
-        #             marker.bearing_rad,
-        #             marker.distance_m
-        #         )
-        #         self.marker_observations[marker.marker_id] = (obs, current_time)
+        for marker in msg.markers:
+            if marker.marker_id in self.marker_positions:
+                obs = MarkerObservation(
+                    marker.marker_id,
+                    marker.bearing_rad,
+                    marker.distance_m
+                )
+                self.marker_observations[marker.marker_id] = (obs, current_time)
 
         # If localized and correction enabled, apply drift correction
-        # if self.current_pose and self.get_parameter('pose_correction_enabled').value:
-        #     self._correct_pose_from_markers()
-
-        pass
+        if self.current_pose and self.get_parameter('pose_correction_enabled').value:
+            self._correct_pose_from_markers()
 
     def _odom_callback(self, msg: Odometry) -> None:
         """

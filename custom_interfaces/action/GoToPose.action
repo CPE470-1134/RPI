@@ -1,0 +1,47 @@
+# Goal: Navigate to target pose in arena frame
+# Robot will rotate to face target, drive to position, then rotate to final heading
+
+# Target position in arena frame (meters)
+float32 target_x
+float32 target_y
+
+# Target heading in arena frame (radians)
+# Set to NaN or a large value (e.g., 999.0) to skip final rotation
+float32 target_theta
+
+# Optional speed overrides (use 0.0 for defaults)
+float32 linear_speed  # m/s
+float32 angular_speed # rad/s
+
+---
+# Result: Final status
+
+# True if navigation completed successfully
+bool success
+
+# Final position reached (arena frame)
+float32 final_x
+float32 final_y
+float32 final_theta
+
+# Error message if failed
+string message
+
+---
+# Feedback: Progress updates during navigation
+
+# Current phase of navigation
+uint8 ROTATING_TO_HEADING = 0
+uint8 DRIVING_TO_TARGET = 1
+uint8 ROTATING_TO_FINAL = 2
+
+uint8 phase
+
+# Progress within current phase (0.0 to 1.0)
+float32 progress
+
+# Distance remaining to target (meters)
+float32 distance_remaining
+
+# Status message
+string status

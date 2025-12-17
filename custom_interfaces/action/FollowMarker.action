@@ -1,0 +1,60 @@
+# Goal: Approach specific ArUco marker using visual servoing
+# Robot will iteratively align to marker and approach until at target distance
+
+# Target marker ID to approach
+int32 marker_id
+
+# Distance to stop from marker (meters)
+float32 stop_distance
+
+# Maximum approach iterations (safety limit)
+# Default: 20
+int32 max_iterations
+
+# Optional speed overrides (use 0.0 for defaults)
+float32 linear_speed  # m/s for approach
+float32 angular_speed # rad/s for alignment
+
+---
+# Result: Final status
+
+# True if successfully reached target distance
+bool success
+
+# Final distance to marker (meters)
+float32 final_distance
+
+# Final bearing to marker (radians)
+float32 final_bearing
+
+# Number of iterations performed
+int32 iterations
+
+# Error message if failed
+string message
+
+---
+# Feedback: Progress updates during approach
+
+# Current action
+uint8 SEARCHING = 0     # Waiting for marker to be visible
+uint8 ALIGNING = 1      # Rotating to face marker
+uint8 APPROACHING = 2   # Driving toward marker
+uint8 COMPLETE = 3      # At target distance
+
+uint8 action
+
+# Current distance to marker (meters)
+float32 current_distance
+
+# Current bearing to marker (radians)
+float32 current_bearing
+
+# Marker visible flag
+bool marker_visible
+
+# Iteration count
+int32 iteration
+
+# Status message
+string status
